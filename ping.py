@@ -1,5 +1,6 @@
 from flask import Flask
-import socket,json,time,binascii,os,configparser
+import socket,json,time,binascii,os
+import uuid,configparser
 from ipaddress import *
 import pingparsing
 
@@ -12,15 +13,22 @@ def checkSum():
         crc = binascii.crc32(str, crc) 
         str = f.read(blocksize) 
     f.close() 
-    return hex(crc)
+    return crc
 
+__CONFILE__ = "conf"
 conf = configparser.ConfigParser()
-conf.read_file(open("conf",'r',encoding='UTF-8'))
+conf.read_file(open(__CONFILE__,'r',encoding='UTF-8'))
 __SERVER_PORT__ = conf.getint("server","port")
 __SERVER_NAME__ = conf.get("server","name")
-__SERVER_CHECKSUM__ = checkSum()
-app = Flask(__name__)
+__SERVER_UUID__ = conf.get("server","uuid")
 __version__="0.0.1"
+if len(__SERVER_UUID__)<10:
+    conf.set("server","uuid",str(uuid.uuid1()))
+    with open(__CONFILE__,"w+",encoding='utf8') as f:
+        conf.write(f)
+__SERVER_CHECKSUM__ = checkSum()+binascii.crc32(__SERVER_UUID__.encode())
+
+app = Flask(__name__)
 
 # IP Class for save ping result
 class IP:
@@ -35,7 +43,7 @@ class Result:
     f = __SERVER_NAME__
     ipv4 = IP()
     ipv6 = IP()
-    checkSum = ''
+    checkSum = __SERVER_CHECKSUM__
     version = __version__
 def to_json(obj):
     return{
@@ -60,8 +68,11 @@ def to_json(obj):
         }
     }
 
-@app.route('/getPing/<domain>', methods=['POST','GET'])
-def getPing(domain):
+@app.route('/getPing/<domain>/<cs>', methods=['POST','GET'])
+def getPing(domain,cs):
+    print(cs,__SERVER_CHECKSUM__)
+    if str(cs)!=str(__SERVER_CHECKSUM__):
+        return 'None'
     result = Result()
     dns_res=socket.getaddrinfo(domain,None)
 
@@ -98,9 +109,10 @@ def getPing(domain):
         i[0].avg = i[1]['rtt_avg']
         i[0].reachable = True if (i[1]['packet_receive']>0) else False
         i[0].loss = i[1]['packet_loss_rate']
-    result.checkSum=checkSum()
     return json.dumps(result,default=to_json,ensure_ascii=False)
 
 if __name__ == '__main__':
+    print(checkSum())
     app.config['JSON_AS_ASCII'] = False
     app.run(debug=True,port=__SERVER_PORT__)
+    
