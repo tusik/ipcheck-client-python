@@ -22,7 +22,7 @@ __SERVER_PORT__ = conf.getint("server","port")
 __SERVER_NAME__ = conf.get("server","name")
 __SERVER_UUID__ = conf.get("server","uuid")
 __SERVER_DEBUG__ = False if conf.getint("server","debug")==0 else True
-__version__="0.0.3"
+__version__="0.0.4"
 if len(__SERVER_UUID__)<10:
     conf.set("server","uuid",str(uuid.uuid1()))
     with open(__CONFILE__,"w+",encoding='utf8') as f:
@@ -70,6 +70,17 @@ def to_json(obj):
     }
 def requestCheckSum(domain,ts):
     return str(binascii.crc32((__SERVER_UUID__+domain+str(ts)).encode()))
+
+def startPing(ip):
+    ping_parser = pingparsing.PingParsing()
+    transmitter = pingparsing.PingTransmitter()
+    transmitter.count = 5
+    transmitter.destination_host = ip
+    ping_res = transmitter.ping()
+    if ping_res.returncode == 1 or ping_res.returncode == 0:
+        return ping_parser.parse(ping_res).as_dict()
+    else:
+        return None
 @app.route('/getPing/<domain>/<cs>/<ts>', methods=['POST','GET'])
 def getPing(domain,cs,ts):
     if str(cs)!=requestCheckSum(domain,ts):
@@ -94,19 +105,14 @@ def getPing(domain,cs,ts):
     res_tmp = []
 
     if result.ipv4.address != None:
-        ping_parser = pingparsing.PingParsing()
-        transmitter = pingparsing.PingTransmitter()
-        transmitter.count = 5
-        transmitter.destination_host = result.ipv4.address
-        v4_res = ping_parser.parse(transmitter.ping().stdout).as_dict()
-        res_tmp.append([result.ipv4,v4_res])
+        tmp_res = startPing(result.ipv4.address)
+        if tmp_res != None:
+            res_tmp.append([result.ipv4,tmp_res])
+
     if result.ipv6.address != None:
-        ping_parser = pingparsing.PingParsing()
-        transmitter = pingparsing.PingTransmitter()
-        transmitter.count = 5
-        transmitter.destination_host = result.ipv6.address
-        v6_res = ping_parser.parse(transmitter.ping().stdout).as_dict()
-        res_tmp.append([result.ipv6,v6_res])
+        tmp_res = startPing(result.ipv6.address)
+        if tmp_res != None:
+            res_tmp.append([result.ipv6,tmp_res])
 
     for i in res_tmp:
         i[0].min = i[1]['rtt_min']

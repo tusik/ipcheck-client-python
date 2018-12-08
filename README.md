@@ -16,5 +16,5 @@ cd ipcheck
 vim conf
 [server]
 port=19970
-name=江苏镇江电信
+debug=0
 ```
