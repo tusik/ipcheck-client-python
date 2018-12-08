@@ -21,6 +21,7 @@ conf.read_file(open(__CONFILE__,'r',encoding='UTF-8'))
 __SERVER_PORT__ = conf.getint("server","port")
 __SERVER_NAME__ = conf.get("server","name")
 __SERVER_UUID__ = conf.get("server","uuid")
+__SERVER_HOST__ = conf.get("server","host")
 __SERVER_DEBUG__ = False if conf.getint("server","debug")==0 else True
 __version__="0.1.0"
 if len(__SERVER_UUID__)<10:
@@ -139,5 +140,5 @@ if __name__ == '__main__':
         os._exit(1)
     print(":::::::::::::::::::::System Info::::::::::::::::::::::")
     app.config['JSON_AS_ASCII'] = False
-    app.run(debug=__SERVER_DEBUG__,port=__SERVER_PORT__)
+    app.run(debug=__SERVER_DEBUG__,port=__SERVER_PORT__,host=__SERVER_HOST__)
     
