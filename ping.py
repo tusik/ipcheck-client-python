@@ -22,7 +22,7 @@ __SERVER_PORT__ = conf.getint("server","port")
 __SERVER_NAME__ = conf.get("server","name")
 __SERVER_UUID__ = conf.get("server","uuid")
 __SERVER_DEBUG__ = False if conf.getint("server","debug")==0 else True
-__version__="0.0.4"
+__version__="0.0.5"
 if len(__SERVER_UUID__)<10:
     conf.set("server","uuid",str(uuid.uuid1()))
     with open(__CONFILE__,"w+",encoding='utf8') as f:
@@ -89,6 +89,7 @@ def getPing(domain,cs,ts):
     dns_res=socket.getaddrinfo(domain,None)
 
     ip_list=[]
+    print(dns_res)
     for i in dns_res:
         ip_list.append(i[4][0])
     ip_list=set(ip_list)
