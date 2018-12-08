@@ -90,16 +90,20 @@ def getPing(domain,cs,ts):
             result.ipv6.address=i
             continue
 
-    ping_parser = pingparsing.PingParsing()
-    transmitter = pingparsing.PingTransmitter()
-    transmitter.count = 5
+
     res_tmp = []
 
     if result.ipv4.address != None:
+        ping_parser = pingparsing.PingParsing()
+        transmitter = pingparsing.PingTransmitter()
+        transmitter.count = 5
         transmitter.destination_host = result.ipv4.address
         v4_res = ping_parser.parse(transmitter.ping()).as_dict()
         res_tmp.append([result.ipv4,v4_res])
     if result.ipv6.address != None:
+        ping_parser = pingparsing.PingParsing()
+        transmitter = pingparsing.PingTransmitter()
+        transmitter.count = 5
         transmitter.destination_host = result.ipv6.address
         v6_res = ping_parser.parse(transmitter.ping()).as_dict()
         res_tmp.append([result.ipv6,v6_res])

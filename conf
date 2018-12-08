@@ -2,5 +2,5 @@
 port = 19970
 name = 浙江宁波联通
 uuid = 6d7fd5c6-fab7-11e8-9bd8-6057181cc6b7
-debug = 0
+debug = 1
 
