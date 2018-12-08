@@ -22,7 +22,7 @@ __SERVER_PORT__ = conf.getint("server","port")
 __SERVER_NAME__ = conf.get("server","name")
 __SERVER_UUID__ = conf.get("server","uuid")
 __SERVER_DEBUG__ = False if conf.getint("server","debug")==0 else True
-__version__="0.0.5"
+__version__="0.1.0"
 if len(__SERVER_UUID__)<10:
     conf.set("server","uuid",str(uuid.uuid1()))
     with open(__CONFILE__,"w+",encoding='utf8') as f:
@@ -33,19 +33,21 @@ app = Flask(__name__)
 
 # IP Class for save ping result
 class IP:
-    address = None
-    reachable = False
-    min = -0.1
-    max = -0.1
-    avg = -0.1
-    loss = 0
+    def __init__(self):
+        self.address = None
+        self.reachable = False
+        self.min = -0.1
+        self.max = -0.1
+        self.avg = -0.1
+        self.loss = 0
 # Result Class for whole ping test result
 class Result:
-    f = __SERVER_NAME__
-    ipv4 = IP()
-    ipv6 = IP()
-    checkSum = __SERVER_CHECKSUM__
-    version = __version__
+    def __init__(self):
+        self.f = __SERVER_NAME__
+        self.ipv4 = IP()
+        self.ipv6 = IP()
+        self.checkSum = __SERVER_CHECKSUM__
+        self.version = __version__
 def to_json(obj):
     return{
         "from": obj.f,
@@ -77,7 +79,7 @@ def startPing(ip):
     transmitter.count = 5
     transmitter.destination_host = ip
     ping_res = transmitter.ping()
-    if ping_res.returncode == 1 or ping_res.returncode == 0:
+    if ping_res.returncode == 0:
         return ping_parser.parse(ping_res).as_dict()
     else:
         return None
@@ -89,12 +91,12 @@ def getPing(domain,cs,ts):
     dns_res=socket.getaddrinfo(domain,None)
 
     ip_list=[]
-    print(dns_res)
     for i in dns_res:
         ip_list.append(i[4][0])
     ip_list=set(ip_list)
-
+ 
     for i in ip_list:
+
         if isinstance(ip_address(i),IPv4Address) and result.ipv4.address == None:
             result.ipv4.address=i
             continue
@@ -121,7 +123,9 @@ def getPing(domain,cs,ts):
         i[0].avg = i[1]['rtt_avg']
         i[0].reachable = True if (i[1]['packet_receive']>0) else False
         i[0].loss = i[1]['packet_loss_rate']
-    return json.dumps(result,default=to_json,ensure_ascii=False)
+    res_txt = json.dumps(result,default=to_json,ensure_ascii=False)
+    del result
+    return res_txt
 def checkClient():
     res = requests.post("https://if.uy/client/"+__version__+"/"+str(checkSum())).text
     return res
