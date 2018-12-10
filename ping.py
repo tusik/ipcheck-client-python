@@ -155,7 +155,7 @@ def checkClient():
     return res
 
 def sendAlive():
-    if requests.get("https://if.uy/client/alive/uuid="+__SERVER_UUID__).status_code != 200:
+    if requests.get("https://if.uy/client/alive/"+__SERVER_UUID__).status_code != 200:
         print("Get error from server")
 
 if __name__ == '__main__':
