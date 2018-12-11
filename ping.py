@@ -165,7 +165,7 @@ if __name__ == '__main__':
     if checkClient()!="true":
         print("The Client is not a vaildate Client, Please Check your file")
         print(":::::::::::::::::::::ERROR::::::::::::::::::::::")
-        os._exit(1)
+        #os._exit(1)
     print(":::::::::::::::::::::System Info::::::::::::::::::::::")
 
     scheduler = ReportScheduler(0.25*60*60, sendAlive)
