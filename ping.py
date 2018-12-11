@@ -107,8 +107,8 @@ def startPing(ip):
         return ping_parser.parse(ping_res).as_dict()
     else:
         return None
-@app.route('/getPing/<domain>/<cs>/<ts>', methods=['POST','GET'])
-def getPing(domain,cs,ts):
+@app.route('/getPing/<nt>/<domain>/<cs>/<ts>', methods=['POST','GET'])
+def getPing(nt,domain,cs,ts):
     if str(cs)!=requestCheckSum(domain,ts):
         return 'None'
     result = Result()
@@ -118,28 +118,28 @@ def getPing(domain,cs,ts):
     for i in dns_res:
         ip_list.append(i[4][0])
     ip_list=set(ip_list)
- 
+
     for i in ip_list:
 
-        if isinstance(ip_address(i),IPv4Address) and result.ipv4.address == None:
+        if (isinstance(ip_address(i),IPv4Address) and result.ipv4.address == None) and (nt == "v4" or nt == "v4v6"):
             result.ipv4.address=i
             continue
-        if isinstance(ip_address(i),IPv6Address) and result.ipv6.address == None:
+        if (isinstance(ip_address(i),IPv6Address) and result.ipv6.address == None) and (nt == "v6" or nt == "v4v6"):
             result.ipv6.address=i
             continue
 
 
     res_tmp = []
-
-    if result.ipv4.address != None:
-        tmp_res = startPing(result.ipv4.address)
-        if tmp_res != None:
-            res_tmp.append([result.ipv4,tmp_res])
-
-    if result.ipv6.address != None:
-        tmp_res = startPing(result.ipv6.address)
-        if tmp_res != None:
-            res_tmp.append([result.ipv6,tmp_res])
+    if nt == "v4" or nt == "v4v6":
+        if result.ipv4.address != None:
+            tmp_res = startPing(result.ipv4.address)
+            if tmp_res != None:
+                res_tmp.append([result.ipv4,tmp_res])
+    if nt == "v6" or nt == "v4v6":
+        if result.ipv6.address != None:
+            tmp_res = startPing(result.ipv6.address)
+            if tmp_res != None:
+                res_tmp.append([result.ipv6,tmp_res])
 
     for i in res_tmp:
         i[0].min = i[1]['rtt_min']
