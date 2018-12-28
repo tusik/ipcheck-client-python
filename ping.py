@@ -5,6 +5,7 @@ from ipaddress import *
 import pingparsing
 from threading import Timer, Thread
 from time import sleep, time
+from flask_cors import CORS
 def checkSum():
     blocksize = 1024 * 64 
     f = open(__file__,"rb") 
@@ -32,6 +33,7 @@ if len(__SERVER_UUID__)<10:
 __SERVER_CHECKSUM__ = checkSum()+binascii.crc32(__SERVER_UUID__.encode())
 
 app = Flask(__name__)
+CORS(app, resources=r'/*')
 class ReportScheduler(object):
     def __init__(self, sleep_time, function):
         self.sleep_time = sleep_time
@@ -107,27 +109,50 @@ def startPing(ip):
         return ping_parser.parse(ping_res).as_dict()
     else:
         return None
-@app.route('/getPing/<nt>/<domain>/<cs>/<ts>', methods=['POST','GET'])
-def getPing(nt,domain,cs,ts):
-    if str(cs)!=requestCheckSum(domain,ts):
-        return 'None'
-    result = Result()
-    dns_res=socket.getaddrinfo(domain,None)
-
-    ip_list=[]
+def tcpTest(ip,port=80):
+    sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    sock.settimeout(1)
+    return sock.connect_ex((ip,port))
+def dns_query(domain):
+    return socket.getaddrinfo(domain,None)
+def clean_ip_list(dns_res):
+    ip_list = []
     for i in dns_res:
         ip_list.append(i[4][0])
-    ip_list=set(ip_list)
-
+    return set(ip_list)
+def get_ipaddress(ip_list):
+    v4=None
+    v6=None
     for i in ip_list:
-
-        if (isinstance(ip_address(i),IPv4Address) and result.ipv4.address == None) and (nt == "v4" or nt == "v4v6"):
-            result.ipv4.address=i
+        if (isinstance(ip_address(i),IPv4Address) and v4 == None):
+            v4=i
             continue
-        if (isinstance(ip_address(i),IPv6Address) and result.ipv6.address == None) and (nt == "v6" or nt == "v4v6"):
-            result.ipv6.address=i
+        if (isinstance(ip_address(i),IPv6Address) and v6 == None):
+            v6=i
             continue
+    return v4,v6
+@app.route('/justPing/<nt>/<domain>/', methods=['GET'])
+def justPing(domain,nt):
+    ip_list = clean_ip_list((dns_query(domain)))
+    v4, v6 = get_ipaddress(ip_list)
+    if nt == 'v4':
+        obj = startPing(v4)
+    else:
+        obj = startPing(v6)
+    if obj!=None :
+        return json.dumps(obj['rtt_avg'])
+    else:
+        return "-1"
+@app.route('/getPing/<nt>/<domain>/<cs>/<ts>', methods=['POST'])
+def getPing(nt,domain,cs,ts):
+    # if str(cs)!=requestCheckSum(domain,ts):
+    #     return 'None'
+    result = Result()
+    dns_res = dns_query
 
+    ip_list = clean_ip_list(dns_query(domain))
+
+    result.ipv4.address , result.ipv6.address = get_ipaddress(ip_list)
 
     res_tmp = []
     if nt == "v4" or nt == "v4v6":
@@ -168,8 +193,8 @@ if __name__ == '__main__':
         #os._exit(1)
     print(":::::::::::::::::::::System Info::::::::::::::::::::::")
 
-    scheduler = ReportScheduler(0.25*60*60, sendAlive)
-    scheduler.start()
+    # scheduler = ReportScheduler(0.25*60*60, sendAlive)
+    # scheduler.start()
 
     app.config['JSON_AS_ASCII'] = False
     app.run(debug=__SERVER_DEBUG__,port=__SERVER_PORT__,host=__SERVER_HOST__)
