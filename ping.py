@@ -143,6 +143,11 @@ def justPing(domain,nt):
         return json.dumps(obj['rtt_avg'])
     else:
         return "-1"
+@app.route('/getIP/<domain>/', methods=['GET'])
+def getIP(domain):
+    ip_list = clean_ip_list((dns_query(domain)))
+    v4, v6 = get_ipaddress(ip_list)
+    return v4
 @app.route('/getPing/<nt>/<domain>/<cs>/<ts>', methods=['POST','GET'])
 def getPing(nt,domain,cs,ts):
     # if str(cs)!=requestCheckSum(domain,ts):
