@@ -3,7 +3,7 @@ It's the client program for [https://if.uy](https://if.uy)
 
 ## Prepare requirement
 ```
-pip install pingparsing flask requests configparser
+pip3 install pingparsing flask requests configparser flask-cors
 ```
 ## Clone client
 ```
