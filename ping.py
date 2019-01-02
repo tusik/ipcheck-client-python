@@ -143,7 +143,7 @@ def justPing(domain,nt):
         return json.dumps(obj['rtt_avg'])
     else:
         return "-1"
-@app.route('/getPing/<nt>/<domain>/<cs>/<ts>', methods=['POST'])
+@app.route('/getPing/<nt>/<domain>/<cs>/<ts>', methods=['POST','GET'])
 def getPing(nt,domain,cs,ts):
     # if str(cs)!=requestCheckSum(domain,ts):
     #     return 'None'
