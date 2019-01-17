@@ -7,14 +7,14 @@ from threading import Timer, Thread
 from time import sleep, time
 from flask_cors import CORS
 def checkSum():
-    blocksize = 1024 * 64 
-    f = open(__file__,"rb") 
-    str = f.read(blocksize) 
-    crc = 0 
-    while(len(str) != 0): 
-        crc = binascii.crc32(str, crc) 
-        str = f.read(blocksize) 
-    f.close() 
+    blocksize = 1024 * 64
+    f = open(__file__,"rb")
+    str = f.read(blocksize)
+    crc = 0
+    while(len(str) != 0):
+        crc = binascii.crc32(str, crc)
+        str = f.read(blocksize)
+    f.close()
     return crc
 
 __CONFILE__ = "conf"
@@ -203,4 +203,4 @@ if __name__ == '__main__':
 
     app.config['JSON_AS_ASCII'] = False
     app.run(debug=__SERVER_DEBUG__,port=__SERVER_PORT__,host=__SERVER_HOST__)
-    
+
